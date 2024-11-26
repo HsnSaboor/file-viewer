@@ -5,6 +5,8 @@ import os
 import shutil
 from io import BytesIO
 import base64
+import zipfile
+from pathlib import Path
 
 # Function to download file from URL
 def download_file(url, path):
@@ -63,11 +65,12 @@ def main():
         if url:
             temp_dir = "temp_files"
             os.makedirs(temp_dir, exist_ok=True)
-            file_name = url.split('/')[-1]
+            file_name = Path(url).name
             file_path = os.path.join(temp_dir, file_name)
             download_file(url, file_path)
             if file_name.endswith(('.zip', '.rar', '.7z', '.tar.gz')):
-                extract_dir = os.path.join(temp_dir, os.path.splitext(file_name)[0])
+                extract_dir = os.path.join(temp_dir, Path(file_name).stem)
+                os.makedirs(extract_dir, exist_ok=True)
                 extract_archive(file_path, extract_dir)
                 files = list_files(extract_dir)
                 filtered_files = search_files(files, search_query)
