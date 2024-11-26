@@ -61,9 +61,10 @@ def display_file(file_path):
             pdf_display = f'<embed src="data:application/pdf;base64,{base64_pdf}" width="700" height="1000" type="application/pdf">'
             st.components.v1.html(pdf_display)
     elif file_extension in image_extensions:
-        st.image(file_path, use_column_width=True)
+        st.image(file_path, use_container_width=True)
+
     elif file_extension in video_extensions:
-        st.video(file_path)
+        st.video(file_path, use_container_width=True)
     elif file_extension in text_extensions:
         with open(file_path, "r") as f:
             st.code(f.read(), language=file_extension[1:] if file_extension[1:] else "text")
