@@ -3,6 +3,7 @@ import requests
 import shutil
 import os
 from pathlib import Path
+import py7zr
 
 # Function to download file from URL
 def download_file(url, path):
@@ -18,8 +19,13 @@ def download_file(url, path):
 # Function to extract archive
 def extract_archive(file_path, extract_dir):
     try:
-        shutil.unpack_archive(file_path, extract_dir)
-        print(f"Extracted {file_path} to {extract_dir}")
+        if file_path.endswith('.7z'):
+            with py7zr.SevenZipFile(file_path, mode='r') as z:
+                z.extractall(path=extract_dir)
+            print(f"Extracted {file_path} to {extract_dir}")
+        else:
+            shutil.unpack_archive(file_path, extract_dir)
+            print(f"Extracted {file_path} to {extract_dir}")
     except Exception as e:
         print(f"Error extracting archive: {e}")
         st.error(f"Error extracting archive: {e}")
@@ -45,7 +51,7 @@ def main():
                 if file_name.endswith(('.zip', '.rar', '.7z', '.tar.gz')):
                     extract_dir = temp_dir / Path(file_name).stem
                     extract_dir.mkdir(parents=True, exist_ok=True)
-                    extract_archive(str(file_path), str(extract_dir))
+                    extract_archive(file_path, extract_dir)
                     # Further processing of extracted files
                 else:
                     st.warning(f"File {file_name} is not an archive.")
