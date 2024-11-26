@@ -3,3 +3,4 @@ requests
 pyunpack
 patool
 rarfile
+py7zr
