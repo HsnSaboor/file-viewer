@@ -64,7 +64,7 @@ def display_file(file_path):
         st.image(file_path, use_container_width=True)
 
     elif file_extension in video_extensions:
-        st.video(file_path, use_container_width=True)
+        st.video(file_path)
     elif file_extension in text_extensions:
         with open(file_path, "r") as f:
             st.code(f.read(), language=file_extension[1:] if file_extension[1:] else "text")
