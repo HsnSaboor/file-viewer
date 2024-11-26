@@ -19,16 +19,24 @@ def download_file(url, path):
 # Function to extract archive
 def extract_archive(file_path, extract_dir):
     try:
-        if file_path.endswith('.7z'):
-            with py7zr.SevenZipFile(file_path, mode='r') as z:
-                z.extractall(path=extract_dir)
+        if str(file_path).endswith('.7z'):
+            with py7zr.SevenZipFile(str(file_path), mode='r') as z:
+                z.extractall(path=str(extract_dir))
             print(f"Extracted {file_path} to {extract_dir}")
         else:
-            shutil.unpack_archive(file_path, extract_dir)
+            shutil.unpack_archive(str(file_path), str(extract_dir))
             print(f"Extracted {file_path} to {extract_dir}")
     except Exception as e:
         print(f"Error extracting archive: {e}")
         st.error(f"Error extracting archive: {e}")
+
+# Function to list all files in a directory recursively
+def list_files(directory):
+    return [str(p) for p in Path(directory).rglob('*') if p.is_file()]
+
+# Function to search files
+def search_files(files, query):
+    return [f for f in files if query.lower() in Path(f).name.lower()]
 
 # Main app
 def main():
@@ -48,17 +56,25 @@ def main():
             file_path = temp_dir / file_name
             download_file(url, file_path)
             if file_path.exists() and file_path.is_file():
-                if file_name.endswith(('.zip', '.rar', '.7z', '.tar.gz')):
+                if str(file_name).endswith(('.zip', '.rar', '.7z', '.tar.gz')):
                     extract_dir = temp_dir / Path(file_name).stem
                     extract_dir.mkdir(parents=True, exist_ok=True)
                     extract_archive(file_path, extract_dir)
-                    # Further processing of extracted files
+                    files = list_files(extract_dir)
+                    filtered_files = search_files(files, "")
+                    st.session_state.files = [str(f) for f in filtered_files]
                 else:
                     st.warning(f"File {file_name} is not an archive.")
             else:
                 st.error(f"File not found: {file_path}")
         else:
             st.sidebar.error("Please enter a URL.")
+
+    # Main area
+    if 'files' in st.session_state:
+        st.header("File Viewer")
+        selected_file = st.selectbox("Select a file to view:", st.session_state.files)
+        # Add display_file function here as needed
 
 if __name__ == "__main__":
     main()
