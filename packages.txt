@@ -1,4 +1,4 @@
 unzip
 p7zip-full
 ffmpeg
-
+python3-patool
