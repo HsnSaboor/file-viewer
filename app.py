@@ -4,8 +4,8 @@ from pyunpack import Archive
 import os
 import shutil
 from io import BytesIO
-import base64
 import zipfile
+from urllib.parse import unquote
 from pathlib import Path
 
 # Function to download file from URL
@@ -18,21 +18,20 @@ def download_file(url, path):
 def extract_archive(file_path, extract_to):
     Archive(file_path).extractall(extract_to)
 
-# Function to list files in directory
+# Function to list all files in a directory recursively
 def list_files(directory):
-    files = []
-    for root, _, filenames in os.walk(directory):
-        for filename in filenames:
-            files.append(os.path.join(root, filename))
-    return files
+    return [str(p) for p in Path(directory).rglob('*') if p.is_file()]
 
 # Function to display files based on type
 def display_file(file_path):
-    file_extension = os.path.splitext(file_path)[1].lower()
+    file_extension = Path(file_path).suffix.lower()
     if file_extension in ['.pdf']:
         with open(file_path, "rb") as f:
             st.write(f"Displaying PDF: {file_path}")
-            st.components.v1.iframe(src=f"data:application/pdf;base64,{base64.b64encode(f.read()).decode()}", width=700, height=600)
+            st.components.v1.iframe(
+                src=f"data:application/pdf;base64,{base64.b64encode(f.read()).decode()}",
+                width=700, height=600
+            )
     elif file_extension in ['.txt']:
         with open(file_path, "r") as f:
             st.write(f"Displaying Text File: {file_path}")
@@ -48,7 +47,7 @@ def display_file(file_path):
 
 # Function to search files
 def search_files(files, query):
-    return [f for f in files if query.lower() in os.path.basename(f).lower()]
+    return [f for f in files if query.lower() in Path(f).name.lower()]
 
 # Main app
 def main():
@@ -65,7 +64,7 @@ def main():
         if url:
             temp_dir = "temp_files"
             os.makedirs(temp_dir, exist_ok=True)
-            file_name = Path(url).name
+            file_name = unquote(Path(url).name)
             file_path = os.path.join(temp_dir, file_name)
             download_file(url, file_path)
             if file_name.endswith(('.zip', '.rar', '.7z', '.tar.gz')):
@@ -98,7 +97,7 @@ def main():
                     with BytesIO() as buffer:
                         with zipfile.ZipFile(buffer, 'w') as zf:
                             for file in selected_files:
-                                zf.write(file, os.path.basename(file))
+                                zf.write(file, Path(file).name)
                         st.download_button(
                             label="Download Selected Files",
                             data=buffer.getvalue(),
@@ -109,7 +108,7 @@ def main():
                 with BytesIO() as buffer:
                     with zipfile.ZipFile(buffer, 'w') as zf:
                         for file in st.session_state.files:
-                            zf.write(file, os.path.basename(file))
+                            zf.write(file, Path(file).name)
                     st.download_button(
                         label="Download All Files",
                         data=buffer.getvalue(),
@@ -119,7 +118,7 @@ def main():
 
     # Cleanup
     if 'files' in st.session_state:
-        shutil.rmtree("temp_files", ignore_errors=True)
+        shutil.rmtree(temp_dir, ignore_errors=True)
 
 if __name__ == "__main__":
     main()
